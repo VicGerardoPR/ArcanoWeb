@@ -1,7 +1,7 @@
 /**
  * ═══════════════════════════════════════════════════════════════
- * VIDEO SCROLL CONTROLLER
- * Frame-by-frame video control synchronized with scroll position
+ * VIDEO SCROLL CONTROLLER - MEJORADO
+ * Frame-by-frame video control con fallback automático rápido
  * ═══════════════════════════════════════════════════════════════
  */
 
@@ -9,6 +9,7 @@ class VideoScrollController {
     constructor() {
         this.video = document.getElementById('heroVideo');
         this.videoSection = document.querySelector('.video-scroll-section');
+        this.videoContainer = document.querySelector('.video-container');
         this.scrollIndicator = document.querySelector('.scroll-indicator');
         
         if (!this.video || !this.videoSection) {
@@ -17,18 +18,27 @@ class VideoScrollController {
         }
         
         this.isVideoReady = false;
-        this.isScrolling = false;
-        this.scrollTimeout = null;
+        this.loadTimeout = null;
+        this.maxLoadTime = 3000; // 3 segundos máximo para cargar
         
         this.init();
     }
     
     init() {
-        // Wait for video metadata to load
+        // Timeout de seguridad - si el video no carga en 3 segundos, usar fallback
+        this.loadTimeout = setTimeout(() => {
+            if (!this.isVideoReady) {
+                console.warn('Video taking too long to load, using fallback');
+                this.useFallback();
+            }
+        }, this.maxLoadTime);
+        
+        // Intentar cargar el video
         this.video.addEventListener('loadedmetadata', () => {
+            clearTimeout(this.loadTimeout);
             this.isVideoReady = true;
-            this.videoSection.classList.remove('loading');
-            console.log('✓ Video metadata loaded, duration:', this.video.duration);
+            this.videoContainer.classList.remove('loading');
+            console.log('✓ Video loaded successfully, duration:', this.video.duration);
             
             // Start listening to scroll
             this.setupScrollListener();
@@ -36,12 +46,52 @@ class VideoScrollController {
         
         // Handle video load errors
         this.video.addEventListener('error', (e) => {
+            clearTimeout(this.loadTimeout);
             console.error('Video loading error:', e);
-            this.hideScrollIndicator();
+            this.useFallback();
         });
+        
+        // Verificar si el video existe antes de intentar cargarlo
+        this.checkVideoSource();
+    }
+    
+    checkVideoSource() {
+        const source = this.video.querySelector('source');
+        
+        if (!source || !source.src) {
+            console.warn('No video source found, using fallback immediately');
+            clearTimeout(this.loadTimeout);
+            this.useFallback();
+            return;
+        }
         
         // Preload video
         this.video.load();
+    }
+    
+    useFallback() {
+        this.hideScrollIndicator();
+        this.videoContainer.classList.add('video-fallback-active');
+        
+        // Ocultar video
+        if (this.video) {
+            this.video.style.display = 'none';
+        }
+        
+        // Crear fallback visual
+        const fallbackDiv = document.createElement('div');
+        fallbackDiv.className = 'video-fallback-content';
+        fallbackDiv.innerHTML = `
+            <div class="fallback-inner">
+                <h1 class="fallback-title">⚡ ARCANO<span class="gradient-text">AI</span></h1>
+                <p class="fallback-subtitle">Transformando el futuro con IA</p>
+            </div>
+        `;
+        
+        this.videoContainer.appendChild(fallbackDiv);
+        this.videoContainer.classList.remove('loading');
+        
+        console.log('✓ Fallback activated');
     }
     
     setupScrollListener() {
@@ -133,72 +183,6 @@ class VideoScrollController {
 }
 
 // ─────────────────────────────────────────────────────────────── 
-// ALTERNATIVE: SIMPLER VIDEO BACKGROUND (if no video file)
-// ─────────────────────────────────────────────────────────────── 
-
-class VideoFallback {
-    constructor() {
-        this.video = document.getElementById('heroVideo');
-        this.videoSection = document.querySelector('.video-scroll-section');
-        
-        if (!this.video) return;
-        
-        // Check if video source exists
-        this.checkVideoSource();
-    }
-    
-    checkVideoSource() {
-        const source = this.video.querySelector('source');
-        
-        if (!source || !source.src) {
-            this.createFallbackBackground();
-            return;
-        }
-        
-        // Try to load video
-        this.video.addEventListener('error', () => {
-            console.warn('Video failed to load, using fallback');
-            this.createFallbackBackground();
-        });
-    }
-    
-    createFallbackBackground() {
-        // Hide video and create animated gradient background
-        if (this.video) {
-            this.video.style.display = 'none';
-        }
-        
-        if (this.videoSection) {
-            this.videoSection.style.background = `
-                linear-gradient(135deg, 
-                    #000000 0%, 
-                    #0a0e27 25%,
-                    #111827 50%,
-                    #0a0e27 75%,
-                    #000000 100%
-                )
-            `;
-            this.videoSection.style.backgroundSize = '400% 400%';
-            this.videoSection.style.animation = 'gradientShift 15s ease infinite';
-        }
-        
-        // Add keyframe animation if not exists
-        if (!document.getElementById('gradient-animation')) {
-            const style = document.createElement('style');
-            style.id = 'gradient-animation';
-            style.textContent = `
-                @keyframes gradientShift {
-                    0% { background-position: 0% 50%; }
-                    50% { background-position: 100% 50%; }
-                    100% { background-position: 0% 50%; }
-                }
-            `;
-            document.head.appendChild(style);
-        }
-    }
-}
-
-// ─────────────────────────────────────────────────────────────── 
 // INITIALIZATION
 // ─────────────────────────────────────────────────────────────── 
 
@@ -206,13 +190,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initialize video scroll controller
     const videoController = new VideoScrollController();
     
-    // Initialize fallback handler
-    const videoFallback = new VideoFallback();
-    
     console.log('🎬 Video scroll controller initialized');
 });
 
 // Export for use in other modules if needed
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { VideoScrollController, VideoFallback };
+    module.exports = { VideoScrollController };
 }

@@ -116,7 +116,7 @@ class ContactForm {
             await this.simulateAPICall(data);
             
             // Success
-            this.showMessage('¡Mensaje enviado con éxito! Te contactaremos pronto.', 'success');
+            this.showMessage('¡Mensaje preparado! Se abrió tu cliente de correo. Los datos también se copiaron al portapapeles.', 'success');
             this.form.reset();
         } catch (error) {
             // Error
@@ -129,13 +129,58 @@ class ContactForm {
     }
     
     async simulateAPICall(data) {
-        // Replace this with your actual API endpoint
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                console.log('Form data:', data);
-                resolve();
-            }, 1500);
-        });
+        const subject = `Nuevo contacto - ${data.service ? this.getServiceLabel(data.service) : 'Consulta general'}`;
+        const body = [
+            'Nuevo mensaje desde ArcanoWeb:',
+            `Nombre: ${data.name || 'No indicado'}`,
+            `Email: ${data.email || 'No indicado'}`,
+            `Empresa: ${data.company || 'No indicado'}`,
+            `Servicio de interés: ${data.service ? this.getServiceLabel(data.service) : 'Consulta general'}`,
+            '',
+            'Mensaje:',
+            data.message || '—'
+        ].join('\n');
+        
+        // Copy to clipboard
+        await this.copyToClipboard(body);
+        
+        // Open email client
+        const mailtoLink = `mailto:info@arcanointelligence.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+        window.location.href = mailtoLink;
+        
+        return Promise.resolve();
+    }
+    
+    getServiceLabel(value) {
+        const labels = {
+            ia: 'Automatización con IA',
+            web: 'Desarrollo Web',
+            branding: 'Branding & Diseño',
+            all: 'Todos los servicios'
+        };
+        return labels[value] || 'Consulta general';
+    }
+    
+    async copyToClipboard(text) {
+        if (navigator.clipboard && window.isSecureContext) {
+            try {
+                await navigator.clipboard.writeText(text);
+                return;
+            } catch (err) {
+                console.warn('Clipboard API no disponible', err);
+            }
+        }
+        
+        // Fallback for older browsers
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.setAttribute('readonly', '');
+        textarea.style.position = 'absolute';
+        textarea.style.left = '-9999px';
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
     }
     
     showMessage(message, type) {

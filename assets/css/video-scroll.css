@@ -1,6 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════
-   VIDEO SCROLL SECTION - DARK THEME
-   Frame-by-frame video control synchronized with scroll
+   VIDEO SCROLL SECTION - MEJORADO
+   Frame-by-frame video con fallback automático rápido
    ═══════════════════════════════════════════════════════════════ */
 
 .video-scroll-section {
@@ -53,6 +53,7 @@
     transform: translateX(-50%);
     text-align: center;
     animation: fadeInPulse 2s ease-in-out infinite;
+    z-index: 10;
 }
 
 .scroll-text {
@@ -116,7 +117,7 @@
     }
 }
 
-/* Video loading state */
+/* Video loading state - Loading spinner */
 .video-container.loading::after {
     content: '';
     position: absolute;
@@ -129,12 +130,93 @@
     border-top-color: #00ff88;
     border-radius: 50%;
     animation: spin 1s linear infinite;
+    z-index: 10;
 }
 
 @keyframes spin {
     to {
         transform: translate(-50%, -50%) rotate(360deg);
     }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   VIDEO FALLBACK - Activado automáticamente si video no carga
+   ═══════════════════════════════════════════════════════════════ */
+
+.video-fallback-content {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+        135deg,
+        #000000 0%,
+        #0a0e27 25%,
+        #111827 50%,
+        #0a0e27 75%,
+        #000000 100%
+    );
+    background-size: 400% 400%;
+    animation: gradientShift 15s ease infinite;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+}
+
+.fallback-inner {
+    text-align: center;
+    z-index: 2;
+    animation: fadeIn 0.5s ease-out;
+}
+
+.fallback-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: clamp(3rem, 8vw, 6rem);
+    font-weight: 800;
+    color: #f9fafb;
+    margin-bottom: 1rem;
+    text-shadow: 0 0 30px rgba(0, 255, 136, 0.3);
+    animation: fadeInUp 0.8s ease-out;
+}
+
+.fallback-subtitle {
+    font-size: clamp(1.25rem, 3vw, 2rem);
+    color: #d1d5db;
+    font-weight: 500;
+    animation: fadeInUp 0.8s ease-out 0.2s both;
+}
+
+@keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Ocultar el loading spinner cuando el fallback está activo */
+.video-container.video-fallback-active.loading::after {
+    display: none;
 }
 
 /* Responsive adjustments */
@@ -151,6 +233,14 @@
         width: 20px;
         height: 35px;
     }
+    
+    .fallback-title {
+        font-size: 2.5rem;
+    }
+    
+    .fallback-subtitle {
+        font-size: 1.25rem;
+    }
 }
 
 /* High contrast mode support */
@@ -161,5 +251,19 @@
     
     .scroll-text {
         text-shadow: none;
+    }
+}
+
+/* Reduce motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+    .scroll-arrow::before,
+    .scroll-indicator,
+    .fallback-title,
+    .fallback-subtitle {
+        animation: none !important;
+    }
+    
+    .video-fallback-content {
+        animation: none !important;
     }
 }

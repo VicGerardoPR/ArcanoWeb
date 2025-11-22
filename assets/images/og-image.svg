@@ -1,0 +1,64 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#000000;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#0a0e27;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#000000;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="textGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#00ff88;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#6366f1;stop-opacity:1" />
+    </linearGradient>
+    <radialGradient id="glow">
+      <stop offset="0%" style="stop-color:#00ff88;stop-opacity:0.3" />
+      <stop offset="100%" style="stop-color:#00ff88;stop-opacity:0" />
+    </radialGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bgGradient)"/>
+  
+  <!-- Glow effects -->
+  <circle cx="200" cy="150" r="150" fill="url(#glow)"/>
+  <circle cx="1000" cy="500" r="150" fill="url(#glow)"/>
+  
+  <!-- Main content -->
+  <text x="600" y="200" font-family="Space Grotesk, Arial, sans-serif" font-size="72" font-weight="800" fill="#f9fafb" text-anchor="middle">
+    ARCANO INTELLIGENCE
+  </text>
+  
+  <text x="600" y="280" font-family="Inter, Arial, sans-serif" font-size="36" fill="#d1d5db" text-anchor="middle">
+    Transformamos tu negocio con
+  </text>
+  
+  <text x="600" y="340" font-family="Inter, Arial, sans-serif" font-size="48" font-weight="700" fill="url(#textGradient)" text-anchor="middle">
+    Inteligencia Artificial
+  </text>
+  
+  <!-- Features -->
+  <g transform="translate(250, 420)">
+    <rect x="0" y="0" width="200" height="60" rx="8" fill="#1a1f3a" stroke="#00ff88" stroke-width="2"/>
+    <text x="100" y="38" font-family="Inter, Arial, sans-serif" font-size="20" font-weight="600" fill="#00ff88" text-anchor="middle">
+      AI Automation
+    </text>
+  </g>
+  
+  <g transform="translate(500, 420)">
+    <rect x="0" y="0" width="200" height="60" rx="8" fill="#1a1f3a" stroke="#6366f1" stroke-width="2"/>
+    <text x="100" y="38" font-family="Inter, Arial, sans-serif" font-size="20" font-weight="600" fill="#6366f1" text-anchor="middle">
+      Web Development
+    </text>
+  </g>
+  
+  <g transform="translate(750, 420)">
+    <rect x="0" y="0" width="200" height="60" rx="8" fill="#1a1f3a" stroke="#00ff88" stroke-width="2"/>
+    <text x="100" y="38" font-family="Inter, Arial, sans-serif" font-size="20" font-weight="600" fill="#00ff88" text-anchor="middle">
+      Branding
+    </text>
+  </g>
+  
+  <!-- Footer -->
+  <text x="600" y="570" font-family="Inter, Arial, sans-serif" font-size="18" fill="#9ca3af" text-anchor="middle">
+    www.arcanointelligence.com
+  </text>
+</svg>

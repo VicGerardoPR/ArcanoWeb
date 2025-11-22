@@ -10,7 +10,6 @@ Sitemap: https://arcanointelligence.com/sitemap.xml
 Disallow: /admin/
 Disallow: /private/
 Disallow: /*.json$
-Disallow: /*.xml$
 
 # Optimización para crawlers específicos
 User-agent: Googlebot
