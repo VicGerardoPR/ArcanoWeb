@@ -121,24 +121,47 @@
 
     <!-- Video Scroll Section -->
     <section class="video-scroll-section" id="video-section">
-        <div class="video-container loading">
+        <div class="video-container">
+            <!-- POSTER INLINE - Visible INMEDIATAMENTE -->
+            <div style="
+                position: absolute;
+                inset: 0;
+                background: linear-gradient(135deg, #000000 0%, #0a0e27 50%, #000000 100%);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 1;
+            " id="quickPoster">
+                <div style="text-align: center;">
+                    <h1 style="
+                        font-family: 'Space Grotesk', sans-serif;
+                        font-size: clamp(4rem, 10vw, 8rem);
+                        font-weight: 800;
+                        color: #f9fafb;
+                        margin-bottom: 1rem;
+                        text-shadow: 0 0 40px rgba(0, 255, 136, 0.4);
+                    ">⚡ ARCANO<span style="color: #00ff88;">AI</span></h1>
+                    <p style="
+                        font-size: clamp(1.5rem, 3vw, 2.5rem);
+                        color: #00ff88;
+                        font-weight: 500;
+                    ">Transformando el futuro con IA</p>
+                </div>
+            </div>
+            
+            <!-- VIDEO - Carga en background -->
             <video 
                 id="heroVideo" 
                 class="scroll-video"
-                preload="auto"
+                preload="metadata"
                 muted
                 playsinline
-                webkit-playsinline
-                x-webkit-airplay="allow"
-                aria-label="Arcano Intelligence brand video">
+                defaultmuted
+                style="position: relative; z-index: 2;"
+                onloadeddata="document.getElementById('quickPoster').style.display='none'">
                 <source src="assets/video/hero-video.mp4" type="video/mp4">
-                <div class="video-fallback">
-                    <div class="fallback-content">
-                        <h1 class="fallback-title">⚡ ARCANO<span class="gradient-text">AI</span></h1>
-                        <p class="fallback-subtitle">Transformando el futuro con IA</p>
-                    </div>
-                </div>
             </video>
+            
             <div class="video-overlay">
                 <div class="scroll-indicator">
                     <span class="scroll-text">🖱️ Scroll para explorar</span>
@@ -146,7 +169,26 @@
                 </div>
             </div>
         </div>
-    </section>
+        ```
+        
+        ### **PASO 3: Probar** ⏱️ 30 seg
+        1. Guardar cambios
+        2. Limpiar cache: `Ctrl + Shift + R`
+        3. Recargar página
+        4. ✅ Verás el poster INMEDIATAMENTE
+        
+        ---
+        
+        ## 🎯 **QUÉ CAMBIA**
+        
+        ### **Antes** ❌:
+        ```
+        Usuario entra → Pantalla negra 3-5s → Video aparece (tal vez)
+        ```
+        
+        ### **Después** ✅:
+        ```
+        Usuario entra → Poster INSTANTÁNEO (0.1s) → Video carga background → Sin esperas
 
     <!-- Hero Section -->
     <section class="hero-section" id="hero">

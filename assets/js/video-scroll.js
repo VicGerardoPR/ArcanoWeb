@@ -1,7 +1,7 @@
 /**
  * ═══════════════════════════════════════════════════════════════
- * VIDEO SCROLL CONTROLLER - MEJORADO
- * Frame-by-frame video control con fallback automático rápido
+ * VIDEO SCROLL CONTROLLER - ULTRA OPTIMIZADO
+ * Carga inmediata del primer frame + scroll sincronizado
  * ═══════════════════════════════════════════════════════════════
  */
 
@@ -19,105 +19,107 @@ class VideoScrollController {
         
         this.isVideoReady = false;
         this.loadTimeout = null;
-        this.maxLoadTime = 3000; // 3 segundos máximo para cargar
         
         this.init();
     }
     
     init() {
-        // Configurar video
-        this.video.preload = 'auto';
+        // CONFIGURACIÓN CRÍTICA para carga rápida
+        this.video.preload = 'metadata'; // Solo metadata primero (más rápido)
         this.video.muted = true;
         this.video.playsInline = true;
+        this.video.defaultMuted = true;
         
-        // Timeout más corto - si no carga en 3 segundos, usar fallback
-        this.maxLoadTime = 3000;
+        // Establecer el primer frame INMEDIATAMENTE
+        this.video.currentTime = 0.1; // Forzar carga del primer frame
+        
+        // Timeout de seguridad - 2 segundos
         this.loadTimeout = setTimeout(() => {
             if (!this.isVideoReady) {
-                console.warn('Video timeout - using fallback');
+                console.warn('⏱️ Video timeout - usando fallback');
                 this.useFallback();
             }
-        }, this.maxLoadTime);
+        }, 2000);
         
-        // Intentar cargar el video inmediatamente
+        // Cargar video inmediatamente
         this.video.load();
         
-        // Múltiples puntos de entrada para marcar como listo
+        // Handler unificado para marcar como listo
         const markAsReady = () => {
-            if (!this.isVideoReady) {
+            if (!this.isVideoReady && this.video.readyState >= 1) {
                 clearTimeout(this.loadTimeout);
                 this.isVideoReady = true;
                 this.videoContainer.classList.remove('loading');
+                console.log('✅ Video listo - readyState:', this.video.readyState, 'duration:', this.video.duration);
+                
+                // Configurar scroll listener
                 this.setupScrollListener();
-                console.log('✓ Video ready, readyState:', this.video.readyState);
+                
+                // Forzar actualización inicial
+                this.handleScroll();
             }
         };
         
-        // Evento más temprano - solo metadata
+        // Evento LOADEDMETADATA - El más temprano y confiable
         this.video.addEventListener('loadedmetadata', () => {
-            console.log('✓ Metadata loaded, duration:', this.video.duration);
-            // Si tenemos metadata, podemos empezar (aunque sea básico)
-            if (this.video.duration && this.video.readyState >= 1) {
-                setTimeout(markAsReady, 500); // Dar un poco más de tiempo
-            }
-        });
+            console.log('📹 Metadata cargada - duration:', this.video.duration);
+            markAsReady();
+        }, { once: true });
         
-        // Cuando hay datos básicos
+        // Evento LOADEDDATA - Primer frame disponible
         this.video.addEventListener('loadeddata', () => {
-            console.log('✓ Data loaded, readyState:', this.video.readyState);
+            console.log('🎬 Primer frame disponible');
             markAsReady();
-        });
-        
-        // Cuando puede reproducir
-        this.video.addEventListener('canplay', () => {
-            console.log('✓ Can play');
-            markAsReady();
-        });
-        
-        // Cuando puede reproducir sin pausas
-        this.video.addEventListener('canplaythrough', () => {
-            console.log('✓ Can play through');
-            markAsReady();
-        });
+        }, { once: true });
         
         // Manejar errores
         this.video.addEventListener('error', (e) => {
             clearTimeout(this.loadTimeout);
             const error = this.video.error;
-            console.error('Video error:', error ? {
+            console.error('❌ Error de video:', error ? {
                 code: error.code,
-                message: error.message
-            } : 'Unknown error');
+                message: this.getErrorMessage(error.code)
+            } : 'Error desconocido');
             this.useFallback();
         });
         
-        // Verificar estado periódicamente como fallback
-        let checkCount = 0;
+        // Verificación de respaldo cada 200ms (más frecuente)
+        let checks = 0;
         const checkInterval = setInterval(() => {
-            checkCount++;
+            checks++;
             
-            // Si tenemos metadata después de 1 segundo, intentar usar el video
-            if (checkCount >= 2 && this.video.readyState >= 1 && this.video.duration) {
-                console.log('✓ Video has metadata, enabling scrubbing');
+            // Si tenemos metadata o readyState >= 1, activar
+            if (this.video.readyState >= 1 && this.video.duration > 0) {
+                console.log('✅ Video verificado - activando');
                 markAsReady();
                 clearInterval(checkInterval);
             }
             
-            // Si pasaron 10 intentos (5 segundos), usar fallback
-            if (checkCount >= 10) {
+            // Máximo 10 intentos (2 segundos)
+            if (checks >= 10) {
                 clearInterval(checkInterval);
                 if (!this.isVideoReady) {
-                    console.warn('Video check timeout - using fallback');
+                    console.warn('⏱️ Verificación timeout - usando fallback');
                     this.useFallback();
                 }
             }
-        }, 500);
+        }, 200);
     }
     
+    getErrorMessage(code) {
+        const errors = {
+            1: 'MEDIA_ERR_ABORTED - Descarga abortada',
+            2: 'MEDIA_ERR_NETWORK - Error de red',
+            3: 'MEDIA_ERR_DECODE - Error al decodificar',
+            4: 'MEDIA_ERR_SRC_NOT_SUPPORTED - Formato no soportado o archivo no encontrado'
+        };
+        return errors[code] || 'Error desconocido';
+    }
     
     useFallback() {
         this.hideScrollIndicator();
         this.videoContainer.classList.add('video-fallback-active');
+        this.videoContainer.classList.remove('loading');
         
         // Ocultar video
         if (this.video) {
@@ -135,33 +137,31 @@ class VideoScrollController {
         `;
         
         this.videoContainer.appendChild(fallbackDiv);
-        this.videoContainer.classList.remove('loading');
         
-        console.log('✓ Fallback activated');
+        console.log('🎨 Fallback activado');
     }
     
     setupScrollListener() {
-        // Use throttled scroll handler for performance
+        // Throttled scroll handler optimizado
         const throttledScroll = this.throttle(() => {
             this.handleScroll();
         }, 16); // ~60fps
         
         window.addEventListener('scroll', throttledScroll, { passive: true });
         
-        // Initial update
-        this.handleScroll();
+        console.log('🎯 Scroll listener activado');
     }
     
     handleScroll() {
         if (!this.isVideoReady) return;
         
-        // Show/hide scroll indicator
+        // Actualizar indicador de scroll
         this.updateScrollIndicator();
         
-        // Get scroll progress within video section
+        // Obtener progreso del scroll
         const scrollProgress = this.getScrollProgress();
         
-        // Update video time based on scroll progress
+        // Actualizar frame del video
         this.updateVideoTime(scrollProgress);
     }
     
@@ -170,31 +170,31 @@ class VideoScrollController {
         const sectionHeight = this.videoSection.offsetHeight;
         const scrollY = window.scrollY;
         
-        // Calculate how far we've scrolled through the section (0 to 1)
+        // Calcular progreso (0 a 1)
         const progress = (scrollY - sectionTop) / (sectionHeight - window.innerHeight);
         
-        // Clamp between 0 and 1
+        // Limitar entre 0 y 1
         return Math.max(0, Math.min(1, progress));
     }
     
     updateVideoTime(progress) {
-        if (!this.video || !this.video.duration) return;
+        if (!this.video || !this.video.duration || this.video.duration === Infinity) {
+            return;
+        }
         
-        // Calculate target time
+        // Calcular tiempo objetivo
         const targetTime = progress * this.video.duration;
         
-        // Solo actualizar si la diferencia es significativa (previene jitter)
+        // Obtener tiempo actual
         const currentTime = this.video.currentTime || 0;
         const timeDiff = Math.abs(targetTime - currentTime);
         
-        if (timeDiff > 0.1) {
+        // Solo actualizar si la diferencia es > 0.05 segundos (evita jitter)
+        if (timeDiff > 0.05) {
             try {
-                // Intentar establecer el tiempo - el navegador cargará los datos si es necesario
                 this.video.currentTime = targetTime;
             } catch (e) {
-                // Si falla, el video probablemente no tiene datos para ese punto
-                // El navegador intentará cargar automáticamente
-                console.warn('Could not set video time:', targetTime, e);
+                // Silencioso - el navegador cargará cuando pueda
             }
         }
     }
@@ -222,7 +222,7 @@ class VideoScrollController {
         }
     }
     
-    // Throttle utility for performance
+    // Throttle utility
     throttle(func, limit) {
         let inThrottle;
         return function(...args) {
@@ -240,10 +240,12 @@ class VideoScrollController {
 // ─────────────────────────────────────────────────────────────── 
 
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('🚀 Inicializando Arcano Intelligence...');
+    
     // Initialize video scroll controller
     const videoController = new VideoScrollController();
     
-    console.log('🎬 Video scroll controller initialized');
+    console.log('✅ Video scroll controller inicializado');
 });
 
 // Export for use in other modules if needed
